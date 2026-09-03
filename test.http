@@ -1,0 +1,34 @@
+### 1. GET 
+GET http://localhost:3000/passwords
+
+### 2. GET 
+GET http://localhost:3000/passwords/generate?length=16&symbols=true
+
+### 3. GET
+GET http://localhost:3000/passwords/1 
+
+### 4. GET 
+GET http://localhost:3000/passwords/999
+
+### 5. POST 
+POST http://localhost:3000/passwords
+Content-Type: application/json
+
+{
+  "title": "Мой Telegram",
+  "login": "+375291234567",
+  "encryptedPassword": "secret_hash_123"
+}
+
+### 6. PUT
+PUT http://localhost:3000/passwords/1
+Content-Type: application/json
+
+{
+  "title": "Основная почта (Обновлено)",
+  "login": "new_login@gmail.com",
+  "encryptedPassword": "new_secret_hash"
+}
+
+### 7. DELETE 
+DELETE http://localhost:3000/passwords/3
