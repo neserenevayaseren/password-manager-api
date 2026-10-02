@@ -1,0 +1,82 @@
+<%- include('partials/header') %>
+
+<div class="page-center">
+  <h1>Добавить новый пароль</h1>
+
+  <form action="/add" method="POST">
+    <div>
+      <label for="title">Название</label>
+      <input
+        type="text"
+        id="title"
+        name="title"
+        placeholder="Например, Gmail"
+        required
+      />
+    </div>
+
+    <div>
+      <label for="username">Логин</label>
+      <input
+        type="text"
+        id="username"
+        name="username"
+        placeholder="user@example.com"
+        required
+      />
+    </div>
+
+    <div>
+      <label for="password">Пароль</label>
+      <div class="password-row">
+        <input
+          type="text"
+          id="password"
+          name="password"
+          placeholder="Оставьте пустым для авто-генерации"
+        />
+        <button
+          type="button"
+          id="generate-btn"
+          class="btn-generate"
+          title="Сгенерировать пароль"
+        >
+          🎲
+        </button>
+      </div>
+      <small class="hint"
+        >Нажмите 🎲, чтобы сгенерировать надёжный пароль</small
+      >
+    </div>
+
+    <button type="submit">💾 Сохранить</button>
+  </form>
+
+  <br />
+  <a href="/" class="back-link">Вернуться к списку</a>
+</div>
+
+<script>
+  document
+    .getElementById("generate-btn")
+    .addEventListener("click", async () => {
+      const btn = document.getElementById("generate-btn");
+      btn.disabled = true;
+      try {
+        const res = await fetch("/api/generate?length=16");
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        const input = document.getElementById("password");
+        input.value = data.password;
+        input.focus();
+        input.select();
+      } catch (err) {
+        console.error("Ошибка генерации:", err);
+        alert("Не удалось сгенерировать пароль: " + err.message);
+      } finally {
+        btn.disabled = false;
+      }
+    });
+</script>
+
+<%- include('partials/footer') %>

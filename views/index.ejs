@@ -1,0 +1,28 @@
+<%- include('partials/header') %>
+
+<h1>Список паролей</h1>
+
+<div class="table-wrapper">
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Название</th>
+                <th>Логин</th>
+                <th>Действие</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% for (let item of passwords) { %>
+            <tr>
+                <td><span class="badge">#<%= item.id %></span></td>
+                <td><span class="item-title"><%= item.title %></span></td>
+                <td><span class="item-username"><%= item.username %></span></td>
+                <td><a href="/item/<%= item.id %>" class="action-link">Открыть →</a></td>
+            </tr>
+            <% } %>
+        </tbody>
+    </table>
+</div>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,26 @@
+<%- include('partials/header') %>
+
+<h1>Детали пароля</h1>
+
+<div class="detail-card">
+  <p>
+    <strong>Название</strong>
+    <span class="item-title"><%= item.title %></span>
+  </p>
+  <p>
+    <strong>Логин</strong>
+    <span class="item-username"><%= item.username %></span>
+  </p>
+  <p>
+    <strong>Пароль</strong>
+    <code><%= item.password %></code>
+  </p>
+  <p>
+    <strong>Дата создания</strong>
+    <span><%= item.createdAt.toLocaleString('ru-RU') %></span>
+  </p>
+</div>
+
+<a href="/" class="back-link">Вернуться к списку</a>
+
+<%- include('partials/footer') %>
