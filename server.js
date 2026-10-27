@@ -17,7 +17,7 @@ const io = new Server(server, {
 
 const JWT_SECRET = 'super_secret_key_lab7';
 
-const MONGO_URI = 'mongodb+srv://dashakravchenya41_db_user:D%40sha28.02.12Pro@cluster0.66zz9hk.mongodb.net/password-manager?retryWrites=true&w=majority';
+const MONGO_URI = 'mongodb+srv://dashakravchenya41_db_user:ТВОЙ_НОВЫЙ_ПАРОЛЬ@cluster0.66zz9hk.mongodb.net/password-manager?retryWrites=true&w=majority';
 
 mongoose.connect(MONGO_URI)
   .then(() => console.log('✅ База данных MongoDB подключена'))
