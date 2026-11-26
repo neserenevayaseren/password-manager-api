@@ -16,8 +16,8 @@
     <code><%= item.password %></code>
   </p>
   <p>
-    <strong>Дата создания</strong>
-    <span><%= item.createdAt.toLocaleString('ru-RU') %></span>
+    <strong>Дата создания</strong> <%= new
+    Date(item.created_at).toLocaleString('ru-RU') %>
   </p>
 </div>
 

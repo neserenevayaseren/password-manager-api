@@ -5,10 +5,9 @@ const pool = new Pool({
     port: 5432,
     database: 'password_manager',
     user: 'postgres',
-    password: 'root',  // замените на реальный
+    password: 'root',
 });
 
-// Асинхронная запись лога (не блокирует запрос)
 async function logToDb(method, url, eventType, details = null) {
     try {
         await pool.query(
@@ -16,8 +15,35 @@ async function logToDb(method, url, eventType, details = null) {
             [method, url, eventType, details]
         );
     } catch (err) {
-        console.error('Ошибка записи лога:', err.message);
+        console.error('❌ Ошибка записи лога:', err.message);
+        const e = new Error(`Сбой логирования: ${err.message}`);
+        e.isLoggingError = true;
+        throw e;                 // ← ОБЯЗАТЕЛЬНО throw, не просто console.error
     }
 }
 
-module.exports = { pool, logToDb };
+async function getAllPasswords() {
+    const result = await pool.query('SELECT * FROM password_items ORDER BY id DESC');
+    return result.rows;
+}
+
+async function getPasswordById(id) {
+    const result = await pool.query('SELECT * FROM password_items WHERE id = $1', [id]);
+    return result.rows[0] || null;
+}
+
+async function createPassword(title, username, password) {
+    const result = await pool.query(
+        'INSERT INTO password_items (title, username, password) VALUES ($1, $2, $3) RETURNING *',
+        [title, username, password]
+    );
+    return result.rows[0];
+}
+
+module.exports = {
+    pool,
+    logToDb,
+    getAllPasswords,
+    getPasswordById,
+    createPassword,
+};

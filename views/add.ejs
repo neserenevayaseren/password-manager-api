@@ -1,82 +1,139 @@
 <%- include('partials/header') %>
 
 <div class="page-center">
-  <h1>Добавить новый пароль</h1>
+    <h1>Добавить новый пароль</h1>
 
-  <form action="/add" method="POST">
-    <div>
-      <label for="title">Название</label>
-      <input
-        type="text"
-        id="title"
-        name="title"
-        placeholder="Например, Gmail"
-        required
-      />
-    </div>
+    <!-- Блок с ошибками (выводится, если сервер вернул массив ошибок) -->
+    <% if (typeof errors !== 'undefined' && errors.length > 0) { %>
+        <div class="form-errors">
+            <% errors.forEach(function (e) { %>
+                <div class="form-error"><%= e %></div>
+            <% }); %>
+        </div>
+    <% } %>
 
-    <div>
-      <label for="username">Логин</label>
-      <input
-        type="text"
-        id="username"
-        name="username"
-        placeholder="user@example.com"
-        required
-      />
-    </div>
+    <form action="/add" method="POST" id="add-form">
+        <div>
+            <label for="title">Название</label>
+            <input 
+                type="text" 
+                id="title" 
+                name="title" 
+                placeholder="Например, Gmail" 
+                minlength="1" 
+                maxlength="100" 
+                required
+                value="<%= typeof values !== 'undefined' && values.title ? values.title : '' %>"
+            >
+            <small class="char-counter" data-for="title">0 / 100</small>
+        </div>
 
-    <div>
-      <label for="password">Пароль</label>
-      <div class="password-row">
-        <input
-          type="text"
-          id="password"
-          name="password"
-          placeholder="Оставьте пустым для авто-генерации"
-        />
-        <button
-          type="button"
-          id="generate-btn"
-          class="btn-generate"
-          title="Сгенерировать пароль"
-        >
-          🎲
-        </button>
-      </div>
-      <small class="hint"
-        >Нажмите 🎲, чтобы сгенерировать надёжный пароль</small
-      >
-    </div>
+        <div>
+            <label for="username">Логин</label>
+            <input 
+                type="text" 
+                id="username" 
+                name="username" 
+                placeholder="user@example.com" 
+                minlength="1" 
+                maxlength="100" 
+                required
+                value="<%= typeof values !== 'undefined' && values.username ? values.username : '' %>"
+            >
+            <small class="char-counter" data-for="username">0 / 100</small>
+        </div>
 
-    <button type="submit">💾 Сохранить</button>
-  </form>
+        <div>
+            <label for="password">Пароль</label>
+            <div class="password-row">
+                <input 
+                    type="text" 
+                    id="password" 
+                    name="password" 
+                    placeholder="Оставьте пустым для авто-генерации"
+                    maxlength="128"
+                    value="<%= typeof values !== 'undefined' && values.password ? values.password : '' %>"
+                >
+                <button type="button" id="generate-btn" class="btn-generate" title="Сгенерировать пароль">
+                    🎲
+                </button>
+            </div>
+            <small class="char-counter" data-for="password">0 / 128</small>
+            <small class="hint">Нажмите 🎲, чтобы сгенерировать надёжный пароль</small>
+        </div>
 
-  <br />
-  <a href="/" class="back-link">Вернуться к списку</a>
+        <button type="submit">Сохранить</button>
+    </form>
+
+    <br>
+    <a href="/" class="back-link">Вернуться к списку</a>
 </div>
 
+<!-- Скрытый блок для безопасной передачи ошибок из EJS в JavaScript -->
+<% if (typeof errors !== 'undefined' && errors.length > 0) { %>
+    <script id="server-errors-data" type="application/json">
+        <%- JSON.stringify(errors) %>
+    </script>
+<% } %>
+
 <script>
-  document
-    .getElementById("generate-btn")
-    .addEventListener("click", async () => {
-      const btn = document.getElementById("generate-btn");
-      btn.disabled = true;
-      try {
-        const res = await fetch("/api/generate?length=16");
-        if (!res.ok) throw new Error("HTTP " + res.status);
-        const data = await res.json();
-        const input = document.getElementById("password");
-        input.value = data.password;
-        input.focus();
-        input.select();
-      } catch (err) {
-        console.error("Ошибка генерации:", err);
-        alert("Не удалось сгенерировать пароль: " + err.message);
-      } finally {
-        btn.disabled = false;
-      }
+    // 1. СЧЕТЧИКИ СИМВОЛОВ
+    document.querySelectorAll('.char-counter').forEach(counter => {
+        const input = document.getElementById(counter.dataset.for);
+        if (!input) return;
+        
+        const max = input.maxLength;
+        const update = () => {
+            const len = input.value.length;
+            counter.textContent = `${len} / ${max}`;
+            counter.classList.toggle('near-limit', len > max * 0.8);
+            counter.classList.toggle('at-limit', len >= max);
+        };
+        
+        input.addEventListener('input', update);
+        update(); // Первичная отрисовка при загрузке
     });
+
+    // 2. ГЕНЕРАТОР ПАРОЛЯ
+    const generateBtn = document.getElementById('generate-btn');
+    if (generateBtn) {
+        generateBtn.addEventListener('click', async () => {
+            generateBtn.disabled = true;
+            try {
+                const res = await fetch('/api/generate?length=16');
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                
+                const data = await res.json();
+                const input = document.getElementById('password');
+                input.value = data.password;
+                
+                // Вызываем событие input, чтобы счетчик символов обновился
+                input.dispatchEvent(new Event('input'));
+                
+                input.focus();
+                input.select();
+            } catch (err) {
+                console.error('Ошибка генерации:', err);
+                alert('Не удалось сгенерировать пароль: ' + err.message);
+            } finally {
+                generateBtn.disabled = false;
+            }
+        });
+    }
+
+    // 3. ВЫВОД ОШИБОК В КОНСОЛЬ РАЗРАБОТЧИКА (F12)
+    const errorDataScript = document.getElementById('server-errors-data');
+    if (errorDataScript) {
+        try {
+            const serverErrors = JSON.parse(errorDataScript.textContent);
+            console.error('❌ Обнаружены ошибки при заполнении формы:');
+            serverErrors.forEach(err => {
+                console.error('   - ' + err);
+            });
+        } catch (e) {
+            console.error('Ошибка парсинга данных об ошибках', e);
+        }
+    }
 </script>
 
 <%- include('partials/footer') %>

@@ -1,18 +1,44 @@
 const { logToDb } = require('../db');
 
-// Логирующее middleware: время, метод, URL записываются в БД
-function requestLogger(req, res, next) {
-    const start = Date.now();
+const WRITE_METHODS = ['POST', 'PUT', 'PATCH', 'DELETE'];
 
-    // Срабатывает после отправки ответа — можно получить статус и длительность
+async function requestLogger(req, res, next) {
+    const start = Date.now();
+    const isWrite = WRITE_METHODS.includes(req.method);
+
+    try {
+        await logToDb(
+            req.method,
+            req.originalUrl,
+            isWrite ? 'WRITE_REQUEST' : 'REQUEST',
+            'incoming request'
+        );
+    } catch (err) {
+        console.error('❌ Нарушен процесс логирования:', err.message);
+
+        // Строгий режим: запись/удаление запрещены без лога → страница "5"
+        if (isWrite) {
+            return res.status(500).render('5', {
+                user: req.user || { name: 'Гость', role: 'guest' },
+                error: err.message
+            });
+        }
+
+        // Мягкий режим: чтение разрешено, просто пропускаем лог
+        console.warn('⚠️  Чтение продолжается без записи в лог (БД логов недоступна)');
+        return next();
+    }
+
     res.on('finish', () => {
         const duration = Date.now() - start;
+        const time = new Date().toLocaleTimeString('ru-RU');
         const details = `status=${res.statusCode}, duration=${duration}ms`;
-
-        logToDb(req.method, req.originalUrl, 'REQUEST', details);
+        console.log(`[${time}] ${req.method} ${req.originalUrl} -> ${res.statusCode} (${duration}ms)`);
+        logToDb(req.method, req.originalUrl, 'REQUEST_FINISH', details)
+            .catch(e => console.error('❌ Ошибка finish-лога:', e.message));
     });
 
-    next();  // обязательно, иначе запрос зависнет
+    next();
 }
 
 module.exports = requestLogger;

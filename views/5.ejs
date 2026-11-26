@@ -1,0 +1,13 @@
+<%- include('partials/header', { user: user }) %>
+
+<div class="error-page">
+  <div class="error-code">5</div>
+  <h1>Нарушен процесс логирования</h1>
+  <p>Обратитесь к администратору.</p>
+  <% if (typeof error !== 'undefined' && error) { %>
+    <p class="error-details"><small><%= error %></small></p>
+  <% } %>
+  <a href="/" class="btn">← На главную</a>
+</div>
+
+<%- include('partials/footer') %>
