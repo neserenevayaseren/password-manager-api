@@ -15,6 +15,8 @@ const checkAuth = require('./middleware/auth');
 app.use(requestLogger);
 app.use(checkAuth);
 
+app.use('/api/v1', require('./routes/api'));
+
 const passwordRoutes = require('./routes/passwords');
 app.use('/', passwordRoutes);
 
@@ -53,6 +55,10 @@ app.use(async (err, req, res, next) => {
     });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, (err) => {
+    if (err) {
+        console.error('❌ Не удалось запустить сервер:', err.message);
+        process.exit(1);
+    }
     console.log(`Сервер запущен: http://localhost:${PORT}`);
 });
