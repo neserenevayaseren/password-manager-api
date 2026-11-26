@@ -16,8 +16,14 @@ async function requestLogger(req, res, next) {
     } catch (err) {
         console.error('❌ Нарушен процесс логирования:', err.message);
 
-        // Строгий режим: запись/удаление запрещены без лога → страница "5"
-        if (isWrite) {
+        
+               if (isWrite) {
+            // для API отвечаем JSON, для обычных страниц — страница "5"
+            if (req.originalUrl.startsWith('/api/')) {
+                return res.status(500).json({
+                    error: { code: 'LOGGING_FAILURE', message: 'Сбой логирования: операция запрещена' }
+                });
+            }
             return res.status(500).render('5', {
                 user: req.user || { name: 'Гость', role: 'guest' },
                 error: err.message
