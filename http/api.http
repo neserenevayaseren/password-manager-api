@@ -1,0 +1,186 @@
+@baseUrl = http://localhost:3000/api/v1
+@token = dev-secret-token
+
+# id подставляются автоматически из ответов запросов 2, 4 и 6
+@catId = {{createCategory.response.body.$.data.id}}
+@userId = {{createUser.response.body.$.data.id}}
+@passId = {{createPassword.response.body.$.data.id}}
+
+### 1. Health (200)
+GET {{baseUrl}}/health
+
+### 2. Создать категорию (201)
+# @name createCategory
+POST {{baseUrl}}/categories
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"name": "Соцсети", "description": "Аккаунты в соцсетях"}
+
+### 3. Дубликат категории (409)
+POST {{baseUrl}}/categories
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"name": "Соцсети"}
+
+### 4. Создать пользователя (201, хэша в ответе нет)
+# @name createUser
+POST {{baseUrl}}/users
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"username": "dasha", "email": "d@mail.ru", "master_password": "Str0ng!Pass"}
+
+### 5. Пользователь с плохими данными (400)
+POST {{baseUrl}}/users
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"username": "x1", "email": "abc", "master_password": "1"}
+
+### 6. Создать пароль (201, заголовок Location)
+# @name createPassword
+POST {{baseUrl}}/passwords
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{
+  "title": "Gmail",
+  "username": "me@gmail.com",
+  "password": "MyPass123!",
+  "category_id": {{catId}},
+  "user_id": {{userId}}
+}
+
+### 7. Создать пароль без поля password (201, сгенерируется)
+POST {{baseUrl}}/passwords
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"title": "VK", "username": "dasha"}
+
+### 8. Нет обязательного title (400)
+POST {{baseUrl}}/passwords
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"username": "me"}
+
+### 9. Несуществующая категория (400 INVALID_REFERENCE)
+POST {{baseUrl}}/passwords
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"title": "A", "username": "B", "category_id": 9999}
+
+### 10. Список с пагинацией (200, есть meta)
+GET {{baseUrl}}/passwords?page=1&limit=5
+Authorization: Bearer {{token}}
+
+### 11. Сортировка (200)
+GET {{baseUrl}}/passwords?sort=title&order=asc
+Authorization: Bearer {{token}}
+
+### 12. Поиск (200)
+GET {{baseUrl}}/passwords?search=gma
+Authorization: Bearer {{token}}
+
+### 13. Недопустимое поле сортировки (400)
+GET {{baseUrl}}/passwords?sort=password
+Authorization: Bearer {{token}}
+
+### 14. Получить по id (200)
+GET {{baseUrl}}/passwords/{{passId}}
+Authorization: Bearer {{token}}
+
+### 15. Несуществующий id (404)
+GET {{baseUrl}}/passwords/9999
+Authorization: Bearer {{token}}
+
+### 16. id не число (400)
+GET {{baseUrl}}/passwords/abc
+Authorization: Bearer {{token}}
+
+### 17. Пароли категории (200)
+GET {{baseUrl}}/categories/{{catId}}/passwords
+Authorization: Bearer {{token}}
+
+### 18. Пароли пользователя (200)
+GET {{baseUrl}}/users/{{userId}}/passwords
+Authorization: Bearer {{token}}
+
+### 19. Удалить категорию, в которой есть пароли (409)
+DELETE {{baseUrl}}/categories/{{catId}}
+Authorization: Bearer {{token}}
+
+### 20. PUT полная замена (200)
+PUT {{baseUrl}}/passwords/{{passId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"title": "Gmail 2", "username": "me2@gmail.com", "password": "NewPass456!"}
+
+### 21. PUT без password (400)
+PUT {{baseUrl}}/passwords/{{passId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"title": "X", "username": "Y"}
+
+### 22. PATCH частичное обновление (200)
+PATCH {{baseUrl}}/passwords/{{passId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"title": "Почта"}
+
+### 23. PATCH с пустым телом (400)
+PATCH {{baseUrl}}/passwords/{{passId}}
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{}
+
+### 24. Перегенерировать пароль (200)
+POST {{baseUrl}}/passwords/{{passId}}/regenerate
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"length": 20}
+
+### 25. Удалить пароль (204)
+DELETE {{baseUrl}}/passwords/{{passId}}
+Authorization: Bearer {{token}}
+
+### 26. Удалить повторно (404)
+DELETE {{baseUrl}}/passwords/{{passId}}
+Authorization: Bearer {{token}}
+
+### 27. Без токена (401)
+GET {{baseUrl}}/passwords
+
+### 28. Битый JSON (400 INVALID_JSON)
+POST {{baseUrl}}/passwords
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{"title": "a",
+
+### 29. Генератор (200)
+POST {{baseUrl}}/passwords/generate
+Content-Type: application/json
+
+{"length": 20, "symbols": false}
+
+### 30. Генератор, слишком короткая длина (400)
+POST {{baseUrl}}/passwords/generate
+Content-Type: application/json
+
+{"length": 3}
+
+### 31. Оценка надёжности (200)
+POST {{baseUrl}}/passwords/check-strength
+Content-Type: application/json
+
+{"password": "123456"}
